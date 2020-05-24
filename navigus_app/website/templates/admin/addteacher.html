@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	 <meta name="format-detection" content="telephone=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Navigus</title>
+	<link href="{% static '/css/bootstrap.css'%}" rel="stylesheet" type="text/css" />
+	<link href="{% static '/css/style.css'%}" rel="stylesheet" type="text/css" />
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet"/>
+	<link rel="stylesheet" href="{% static '/css/font-awesome.css'%}" type="text/css" />
+	
+	<script src="{% static '/js/jquery.js'%}" type="text/javascript"></script>
+	<script src="{% static '/js/bootstrap.js'%}" type="text/javascript"></script>
+	<script src = "https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular.min.js"></script>	
+	<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script>
+		<script src="js/respond.js"></script>
+	<![endif]-->
+	<script>
+	var ipAddress = "http://localhost:8001";
+	</script>
+	</head>
+	<body ng-app="mainApp" ng-controller="AddTeacherController">
+<div class="main-page">
+
+	<!-- start header here -->
+	<header class="header">
+		
+	</header>
+	<!-- end header here -->
+
+	<!-- start left sidebar here -->
+		<div class="left_sidebar">
+			<ul>
+				<li ><a id="idDashboard" href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+				<li class="active"><a id="idTeachers" href="{% url 'teachers' %}"><span>Teachers</span></a></li>
+				<li><a href="{% url 'students' %}"><span>Students</span></a></li>
+				<li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+				</ul>
+		</div>
+	<!-- end left sidebar here -->
+
+	<!-- start content area here -->
+		<div class="content_area">
+			
+			<div class="tables_area">
+				<h2>Add Teacher</h2>
+				<form name="signUpForm">
+					{% csrf_token %}
+					<div class="white_box">
+						<div class="add_formarea">
+	
+							<div class="row">
+								<aside class="col-sm-5">
+									<div class="form-group">
+										<label class="text-uppercase">Username</label>
+										<input type="text" value="" placeholder="Enter Username" class="form-control"  ng-model="username" required/>
+									</div>
+								</aside>
+								<aside class="col-sm-5">
+									<div class="form-group">
+										<label class="text-uppercase">Email Address</label>
+										<input type="email" value="" placeholder="Enter Email Address" class="form-control"  ng-model="email" required/>
+									</div>
+								</aside>
+							</div>
+	
+							<div class="row">
+								<aside class="col-sm-5">
+									<div class="form-group">
+										<label class="text-uppercase">Password</label>
+										<input type="password" value="" placeholder="Enter Password" class="form-control"  ng-model="password" required/>
+									</div>
+								</aside>
+								
+							</div>
+	
+							<div class="row">
+								<aside class="col-sm-5">
+									<div class="form-group">
+										<label class="text-uppercase">First Name</label>
+										<input type="text" value="" placeholder="Enter First name" class="form-control"  ng-model="first_name" required/>
+									</div>
+								</aside>
+								<aside class="col-sm-5">
+									<div class="form-group">
+										<label class="text-uppercase">Last Name</label>
+										<input type="text" value="" placeholder="Enter Last Name" class="form-control"  ng-model="last_name" required/>
+									</div>
+								</aside>
+							</div>
+	
+							
+							<button type="submit" class="blue_btn yellow_btn big_yellow text-uppercase" ng-click="signUp()">Submit</button>
+	
+						</div>
+					</div>
+					</form>
+				</div>
+
+			<!-- start footer area here -->
+			
+			<!-- end footer area here -->
+
+		</div>
+	<!-- end content area here -->
+
+
+</div>
+
+
+
+<script src="js/jquery.js" type="text/javascript"></script>
+<script src="js/bootstrap.js" type="text/javascript"></script>
+</body>
+</html>
+<script>
+ var mainApp = angular.module('mainApp', []);
+ mainApp.controller('AddTeacherController', function($rootScope, $scope, AddTeacherServices) {
+	
+	$scope.token = '{{request.session.token}}';
+	 
+	$scope.signUp = function(){
+		if ($scope.signUpForm.$valid) {
+			AddTeacherServices.signUp($scope)
+ 			  .then(function(_data) {
+ 				 alert("Successfully registered.");
+ 				$('#idTeachers')[0].click();
+ 	         },
+ 			 function(response) {
+ 	        	 alert(response.data.message);
+ 	         });
+     	} else {
+             $scope.signUpForm.$submitted = true;
+         }
+ 	}
+ });
+ mainApp.service('AddTeacherServices', function($http) {
+ 	
+ 	
+ 	this.signUp = function(scope) {
+ 		
+ 		var formData = {
+ 				"first_name" : scope.first_name,
+ 				"last_name" : scope.last_name,
+ 	         	"email" : scope.email,
+        		"username" : scope.username,
+         		"password" : scope.password
+         }
+   	  	return $http.post(ipAddress+"/signupteacher/", formData, {
+	 		headers:{'Authorization' : scope.token}
+	 	});
+ 	}
+ });
+ mainApp.config(['$httpProvider', function($httpProvider){ 
+ 	$httpProvider.defaults.xsrfCookieName = 'csrftoken'; 
+ 	$httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+ }]);
+ mainApp.directive('loader', ['$http', function ($http) {
+	    return {
+	        restrict: 'A',
+	        link: function (scope, elm, attrs) {
+	            scope.isLoading = function () {
+	                return $http.pendingRequests.length > 0;
+	            };
+
+	            scope.$watch(scope.isLoading, function (v) {
+	                if (v) {
+	                    elm.show();
+	                } else {
+	                    elm.hide();
+	                }
+	            });
+	        }
+	    };
+
+	}]);
+ mainApp.directive('ngEnter', function () { //a directive to 'enter key press' in elements with the "ng-enter" attribute
+
+     return function (scope, element, attrs) {
+
+         element.bind("keydown keypress", function (event) {
+             if (event.which === 13) {
+                 scope.$apply(function () {
+                     scope.$eval(attrs.ngEnter);
+                 });
+                 event.preventDefault();
+             }
+         });
+
+     };
+ });
+ </script>
+

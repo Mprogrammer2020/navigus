@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	 <meta name="format-detection" content="telephone=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Navigus</title>
+	<link href="{% static '/css/bootstrap.css'%}" rel="stylesheet" type="text/css" />
+	<link href="{% static '/css/style.css'%}" rel="stylesheet" type="text/css" />
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
+	<link rel="stylesheet" href="{% static '/css/font-awesome.css'%}" type="text/css" />
+	
+	<script src="{% static '/js/jquery.js'%}" type="text/javascript"></script>
+	<script src="{% static '/js/bootstrap.js'%}" type="text/javascript"></script>
+	<script src = "https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular.min.js"></script>	
+	<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script>
+		<script src="js/respond.js"></script>
+	<![endif]-->
+	<script>
+	var ipAddress = "http://localhost:8001";
+	</script>
+</head>
+<body ng-app="mainApp" ng-controller="LoginController">
+
+	<div class="container">
+		<div class="login_form_outer">
+			<div class="login_form">
+				<h2>Sign In</h2>
+				<form name="loginForm">
+					{% csrf_token %}
+					<div class="form-group">
+						<label>Username</label>
+						<input type="text" value="" placeholder="Enter Username" class="form-control" name="Username" id="idUsername" ng-model="username" required/>
+						<span class="validmsz" ng-show="loginForm.$submitted || loginForm.Username.$touched">
+	                      	<span ng-show="loginForm.Username.$error.required"><font class="redFont">Username is required.</font></span>
+	                    </span>
+					</div>
+					<div class="form-group">
+						<label>Password</label>
+						<input type="password" value="" placeholder="Enter password" name="Password" ng-model="password" class="form-control" ng-enter="loginUser()" required/>
+						<span class="validmsz" ng-show="loginForm.$submitted || loginForm.Password.$touched">
+	                      	<span ng-show="loginForm.Password.$error.required"><font class="redFont">Password is required.</font></span>
+	                    </span>
+					</div>
+					<p class="forgot_password"><a href="{% url 'signuptemplate' %}">Sign Up</a></p>
+					<!-- <button type="submit" class="blue_btn">Sign In</button> -->
+					<a href="" class="blue_btn" ng-click="loginUser()">Sign in</a>
+				</form>
+			</div>
+			<img src="images/shadow.png" alt="" class="shadow" />
+		</div>
+	</div>
+	<form ng-hide="true" action="{% url 'dashboard' %}" method="POST" id="post-form">
+		{% csrf_token %}
+		<input type="text" id="token" name="token">
+		<input type="Submit" value="Submit form" id="openDashboardForm">
+	</form>
+
+</body>
+</html>
+<script>
+ 
+ 
+ var mainApp = angular.module('mainApp', []);
+ mainApp.controller('LoginController', function($rootScope, $scope, LoginServices) {
+	 
+	$scope.loginUser = function(){
+		if ($scope.loginForm.$valid) {
+ 			LoginServices.loginUser($scope)
+ 			  .then(function(_data) {
+ 				 $("#token").val(_data.data.token);
+				 $("#openDashboardForm").click();
+ 	         },
+ 			 function(response) {
+ 	        	 alert(response.data.message);
+ 	         });
+     	} else {
+             $scope.loginForm.$submitted = true;
+         }
+ 	}
+ });
+ mainApp.service('LoginServices', function($http) {
+ 	
+ 	
+ 	this.loginUser = function(scope) {
+ 		
+ 		var formData = {
+        	"username" : scope.username,
+         	"password" : scope.password
+         }
+   	  	return $http.post(ipAddress+"/loginuser/", formData);
+ 	}
+ });
+ mainApp.config(['$httpProvider', function($httpProvider){ 
+ 	$httpProvider.defaults.xsrfCookieName = 'csrftoken'; 
+ 	$httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+ }]);
+ mainApp.directive('loader', ['$http', function ($http) {
+	    return {
+	        restrict: 'A',
+	        link: function (scope, elm, attrs) {
+	            scope.isLoading = function () {
+	                return $http.pendingRequests.length > 0;
+	            };
+
+	            scope.$watch(scope.isLoading, function (v) {
+	                if (v) {
+	                    elm.show();
+	                } else {
+	                    elm.hide();
+	                }
+	            });
+	        }
+	    };
+
+	}]);
+ mainApp.directive('ngEnter', function () { //a directive to 'enter key press' in elements with the "ng-enter" attribute
+
+     return function (scope, element, attrs) {
+
+         element.bind("keydown keypress", function (event) {
+             if (event.which === 13) {
+                 scope.$apply(function () {
+                     scope.$eval(attrs.ngEnter);
+                 });
+
+                 event.preventDefault();
+             }
+         });
+
+     };
+ });
+ </script>
